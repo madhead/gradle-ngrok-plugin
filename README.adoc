@@ -1,0 +1,57 @@
+= Gradle Ngrok Plugin
+
+A Gradle plugin to start and stop https://ngrok.com[ngrok] tunnels in your builds.
+May be useful for testing webhooks.
+
+== Usage
+
+An installation of `ngrok` is required.
+The plugin will try to find it in `PATH`.
+
+For a complete example, see link:example[example] subproject.
+But the gist of it is:
+
+[souce,kotlin]
+----
+import me.madhead.gradle.ngrok.config.Protocol.HTTP
+
+plugins {
+    id("me.madhead.gradle.ngrok")
+}
+
+ngrok {
+    port.set(8080)
+    protocol.set(HTTP)
+}
+
+tasks {
+    named<JavaExec>("run") {
+        val ngrokServiceProvider = project.gradle.sharedServices.registrations["ngrok"].service
+
+        usesService(ngrokServiceProvider)
+
+        doFirst {
+            (ngrokServiceProvider.get() as NgrokService).start()
+        }
+
+        argumentProviders.add(CommandLineArgumentProvider { listOf((ngrokServiceProvider.get() as NgrokService).url) })
+
+        doLast {
+            (ngrokServiceProvider.get() as NgrokService).stop()
+        }
+    }
+}
+----
+
+The plugin maintains tunnel state in a https://docs.gradle.org/current/userguide/build_services.html[Shared Build Service] registered under "ngrok" name.
+It has a type of link:plugin/src/main/kotlin/me/madhead/gradle/ngrok/service/NgrokService.kt[`NgrokService`] and is available for injection into your tasks.
+This service has `start` and `stop` methods (to start and stop the tunnel, unsurprisingly) and exposes a `url` property with the remote URL of the tunnel.
+However, I don't know the easy way to inject this URL into a `JavaExec` task (e.g. `bootRun`) as its configuration is completely static (except of the `argumentProviders`) and happens in https://docs.gradle.org/current/userguide/build_lifecycle.html#sec:build_phases[configuration phase].
+Please, let me know if you know how to do it better.
+
+To get your tunnel URL outside Gradle, use this snippet:
+
+[souce,shell]
+----
+curl -sX GET http://localhost:4040/api/tunnels | jq '.tunnels[0].public_url'
+----

@@ -1,6 +1,7 @@
 plugins {
-    `java-gradle-plugin`
+    id("com.gradle.plugin-publish").version("1.1.0")
     `embedded-kotlin`
+    kotlin("plugin.serialization").version("1.7.10")
 }
 
 repositories {
@@ -8,29 +9,17 @@ repositories {
 }
 
 dependencies {
+    implementation(platform("org.jetbrains.kotlinx:kotlinx-serialization-bom:1.4.1"))
+    implementation(platform("io.ktor:ktor-bom:2.2.3"))
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json")
+    implementation("io.ktor:ktor-client-java")
+    implementation("io.ktor:ktor-client-content-negotiation")
+    implementation("io.ktor:ktor-serialization-kotlinx-json")
+    implementation("io.ktor:ktor-client-encoding:2.2.3")
 }
 
-testing {
-    suites {
-        val test by getting(JvmTestSuite::class) {
-            useKotlinTest()
-        }
-
-        val functionalTest by registering(JvmTestSuite::class) {
-            useKotlinTest()
-
-            dependencies {
-                implementation(project())
-            }
-
-            targets {
-                all {
-                    testTask.configure { shouldRunAfter(test) }
-                }
-            }
-        }
-    }
-}
+group = "me.madhead.gradle.ngrok"
+version = "1.0"
 
 gradlePlugin {
     website.set("https://github.com/madhead/gradle-ngrok-plugin")
@@ -44,17 +33,5 @@ gradlePlugin {
             tags.set(listOf("ngrok", "tunnel", "networking"))
             implementationClass = "me.madhead.gradle.ngrok.GradleNgrokPlugin"
         }
-    }
-
-    val functionalTest by sourceSets
-
-    testSourceSets(functionalTest)
-}
-
-tasks {
-    named("check") {
-        val functionalTest by testing.suites
-
-        dependsOn(functionalTest)
     }
 }
