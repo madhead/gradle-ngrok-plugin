@@ -19,7 +19,7 @@ dependencies {
 }
 
 group = "me.madhead.gradle.ngrok"
-version = "1.0"
+version = "1.1"
 
 gradlePlugin {
     website.set("https://github.com/madhead/gradle-ngrok-plugin")

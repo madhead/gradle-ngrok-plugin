@@ -24,7 +24,11 @@ class NgrokClient : AutoCloseable {
      * Get the list of active tunnels.
      */
     suspend fun tunnels(): TunnelList {
-        return client.get("http://localhost:4040/api/tunnels").body()
+        return try {
+            client.get("http://localhost:4040/api/tunnels").body()
+        } catch (e: Exception) {
+            TunnelList(emptyList())
+        }
     }
 
     /**
